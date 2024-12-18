@@ -25,11 +25,11 @@ import {
   ButtonGroup,
 } from '@chakra-ui/react'
 import { DeleteIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, CopyIcon } from '@chakra-ui/icons'
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import axios from 'axios'
-import { API_URL } from '../config'
-import PasswordModal from './PasswordModal'
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { API_URL } from "../config";
+import axios from 'axios';
+import PasswordModal from "./PasswordModal";
 import { checkAuth } from '../utils/auth'
 
 const PhotoList = () => {
@@ -66,24 +66,86 @@ const PhotoList = () => {
 
         const [sortField, sortOrder] = sortBy.split('_')
         const response = await axios.get(
-          `${API_URL}/api/photos?bucket=${currentBucket}&page=${page}&sortBy=${sortField}&order=${sortOrder}`
+          `${API_URL}/api/photos`, {
+            params: {
+              bucket: currentBucket,
+              page,
+              sortBy: sortField,
+              order: sortOrder
+            },
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            withCredentials: false,
+            timeout: 10000
+          }
         )
-        setPhotos(response.data.photos)
-        setTotalPages(response.data.totalPages)
+        
+        // 详细的日志和错误处理
+        console.group('Photo Fetch Details')
+        console.log('Request Parameters:', {
+          bucket: currentBucket,
+          page,
+          sortBy: sortField,
+          order: sortOrder
+        })
+        console.log('Full Response:', response)
+        console.log('Response Data:', response.data)
+        console.groupEnd()
+
+        // 严格的数据验证
+        if (!response.data) {
+          throw new Error('No data received from server')
+        }
+        
+        // 处理可能的错误响应
+        if (response.data.error) {
+          throw new Error(response.data.error)
+        }
+
+        // 确保 photos 是数组
+        const photosArray = Array.isArray(response.data.photos) 
+          ? response.data.photos 
+          : [];
+
+        // 设置照片和总页数
+        setPhotos(photosArray)
+        setTotalPages(response.data.totalPages || Math.ceil(response.data.total / 30) || 1)
+        
+        // 如果没有照片，显示提示
+        if (photosArray.length === 0) {
+          toast({
+            title: '提示',
+            description: '当前相册没有照片',
+            status: 'info',
+            duration: 3000,
+          })
+        }
       } catch (error) {
+        console.error('Error fetching photos:', error)
+        
+        // 更详细的错误处理
+        const errorMessage = error.response 
+          ? `服务器错误: ${error.response.status} - ${error.response.data}`
+          : `网络错误: ${error.message}`
+        
         toast({
           title: '获取照片失败',
-          description: error.message,
+          description: errorMessage,
           status: 'error',
-          duration: 3000,
-          isClosable: true,
+          duration: 5000,
         })
+        
+        // 设置空数组和默认页数
+        setPhotos([])
+        setTotalPages(1)
       } finally {
         setLoading(false)
       }
     }
     fetchPhotos()
-  }, [currentBucket, page, sortBy])
+  }, [currentBucket, page, sortBy, toast])
 
   useEffect(() => {
     // 监听排序方式改变事件
@@ -114,21 +176,24 @@ const PhotoList = () => {
 
   const handleDelete = async (photo) => {
     try {
-      await axios.delete(`${API_URL}/api/delete/${currentBucket}/${photo.key}`)
-      // 重新加载照片列表
-      const [sortField, sortOrder] = sortBy.split('_')
-      const response = await axios.get(
-        `${API_URL}/api/photos?bucket=${currentBucket}&page=${page}&sortBy=${sortField}&order=${sortOrder}`
-      )
-      setPhotos(response.data.photos)
-      setTotalPages(response.data.totalPages)
-      
+      await axios.delete(`/api/delete/${currentBucket}/${photo.key}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        withCredentials: false,
+        timeout: 10000
+      })
+      setPhotos(photos.filter(p => p.key !== photo.key))
       toast({
         title: '删除成功',
+        description: `照片 ${photo.key} 已删除`,
         status: 'success',
-        duration: 2000,
+        duration: 3000,
+        isClosable: true,
       })
     } catch (error) {
+      console.error('删除照片失败:', error)
       toast({
         title: '删除失败',
         description: error.message,
