@@ -1,8 +1,132 @@
-# React + Vite
+# R2 Photo Gallery
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个基于 React 和 Cloudflare R2 的现代化照片管理系统。
 
-Currently, two official plugins are available:
+## 主要功能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 1. 照片库管理
+
+- 支持多个照片库（照片库、辅助生殖、精选）
+- 精选图库需要密码访问（密码：password，15分钟有效期）
+- 照片预览功能，支持左右切换和键盘操作
+- 支持复制照片链接
+
+### 2. 照片排序
+
+- 按上传时间排序（升序/降序）
+- 按文件名排序（升序/降序）
+- 排序设置实时生效
+
+### 3. 安全功能
+
+- 精选图库密码保护（密码：password，15分钟有效期）
+- 删除操作密码保护（密码：delete123，5分钟有效期）
+- 密码验证状态自动过期
+- 支持多种操作的独立密码验证
+
+### 4. 用户界面
+
+- 响应式设计，适配各种屏幕尺寸
+- 现代化的 UI 设计（基于 Chakra UI）
+- 友好的用户操作提示
+- 图片预览支持键盘导航
+
+## 技术栈
+
+- **前端框架**: React 18
+- **UI 框架**: Chakra UI
+- **路由**: React Router 6
+- **HTTP 客户端**: Axios
+- **构建工具**: Vite
+- **部署平台**: Cloudflare Pages
+
+## 开发环境设置
+
+1. **安装依赖**
+
+```bash
+npm install
+```
+
+2. **启动开发服务器**
+
+```bash
+npm run dev
+```
+
+3. **构建生产版本**
+
+```bash
+npm run build
+```
+
+## 部署说明
+
+### Cloudflare Pages 部署步骤
+
+1. **构建设置**
+
+   - 构建命令: `npm run build`
+   - 构建输出目录: `dist`
+   - 根目录: `/`（项目根目录）
+2. **环境变量**
+
+   - NODE_VERSION: 18
+3. **重要文件**
+
+   - 确保 `public/_redirects` 文件存在，内容为：
+     ```
+     /* /index.html 200
+     ```
+
+   这个文件用于处理客户端路由。
+
+## 注意事项
+
+1. **密码保护**
+
+   - 精选图库密码: （15分钟有效期）
+   - 删除操作密码: （5分钟有效期）
+   - 密码存储在 `src/utils/auth.js` 中，部署前请修改
+2. **API 配置**
+
+   - API 地址配置在 `src/config.js` 中
+   - 确保 API 地址与您的后端服务匹配
+3. **浏览器兼容性**
+
+   - 支持现代浏览器
+   - 建议使用 Chrome、Firefox、Safari 最新版本
+4. **开发注意事项**
+
+   - 本地开发时确保后端服务正常运行
+   - 修改密码或 API 配置后需要重新构建
+   - 开发时注意查看浏览器控制台的错误信息
+
+## 常见问题
+
+1. **页面空白**
+
+   - 检查 `_redirects` 文件是否正确配置
+   - 确认 API 地址是否正确
+   - 查看浏览器控制台是否有错误
+2. **图片加载失败**
+
+   - 确认 R2 存储桶配置正确
+   - 检查图片 URL 格式
+   - 验证跨域配置
+3. **密码验证问题**
+
+   - 清除浏览器本地存储可重置所有密码验证状态
+   - 密码验证状态存储在 localStorage 中
+   - 注意密码的大小写敏感
+
+## 维护和更新
+
+- 定期检查依赖更新
+- 监控 Cloudflare Pages 部署状态
+- 定期备份重要配置
+- 保持密码定期更换
+
+## 许可证
+
+MIT License
